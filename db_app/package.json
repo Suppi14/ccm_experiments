@@ -1,0 +1,15 @@
+{
+  "name": "db_app",
+  "version": "1.0.0",
+  "description": "handle db request from ccm apps",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Minh Nguyen",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "express": "^4.16.3"
+  }
+}
