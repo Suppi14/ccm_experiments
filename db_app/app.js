@@ -30,7 +30,7 @@ function httpReqHandler(request, response) {
 
         let dbo = db.db(store);
         let collection = dbo.collection(userCollection);
-        let resBody = `selected collection '${userCollection}' from database '${store}'\n`;
+        let resBody = `selected collection ${userCollection} from database ${store}\n`;
         // single query
         collection.findOne({ 'username': username }, function (err, user) {
             if (err) console.error(err);
@@ -47,7 +47,8 @@ function httpReqHandler(request, response) {
             // send response
             response.writeHead(httpStatus.OK, {
                 'Content-Length': Buffer.byteLength(resBody),
-                'Content-Type': 'text/plain' });
+                'Content-Type': 'application/json; charset=utf-8',
+                'Transfer-Encoding': 'chunked'});
             response.write(resBody);
             response.end();
             console.log(`closing Mongo database connection ${dbUrl}`);
