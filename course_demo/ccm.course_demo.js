@@ -13,12 +13,71 @@
 
     name: 'course_demo',
 
-    ccm: 'https://ccmjs.github.io/ccm/versions/ccm-18.0.0.js',
+    ccm: 'https://ccmjs.github.io/ccm/versions/ccm-18.0.6.js',
 
     config: {
+      "html": {
+        "main": {
+          "inner": [
+            { "id": "header" },
+            { "id": "article" },
+            { "id": "feedback" },
+            { "id": "footer" }
+          ]
+        },
+        "content": {
+          "inner": [
+            { "id": "section" },
+            { "id": "menu-list" }
+          ]
+        }
+      },
 
-      // "css": [ "ccm.load", "https://ccmjs.github.io/akless-components/template/resources/default.css" ],
-      "data": [ "ccm.store" ]
+      "css": [
+        "ccm.load", "https://ccmjs.github.io/tkless-components/libs/bootstrap/css/bootstrap.css",
+        { "context": "head", "url": "https://ccmjs.github.io/tkless-components/libs/bootstrap/css/font-face.css" },
+        "resources/default.css"
+      ],
+
+      "js": [ "ccm.load",
+        [ "https://ccmjs.github.io/tkless-components/libs/jquery/jquery.min.js",
+          "https://ccmjs.github.io/tkless-components/libs/bootstrap/js/bootstrap.min.js" ]
+      ],
+
+      "navigation": [ "ccm.load", "resources/navigation.html" ],
+
+      "menu": {
+        "comp": [ "ccm.component", "https://ccmjs.github.io/akless-components/menu/versions/ccm.menu-2.4.0.js", {
+          "css": [ "ccm.load",
+            { "context": "head", "url": "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css" },
+            "https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css",
+            "resources/menu.css"
+          ],
+          "logger": [ "ccm.instance", "https://ccmjs.github.io/akless-components/log/versions/ccm.log-4.0.1.js", {
+            "events": {
+              "click": {
+                "data": true,
+                "user": true
+              }
+            },
+            "onfinish": {
+              "store": {
+                "settings": { "store": "be2_ws1819_menu_log", "url": "http://localhost:3000" },
+                "permissions": {
+                  "creator": "akless2m",
+                  "realm": "hbrsinfkaul",
+                  "access": {
+                    "get": "all",
+                    "set": "creator",
+                    "del": "creator"
+                  }
+                }
+              }
+            }
+          } ]
+        } ],
+        "data": ["ccm.store", "resources/datasets.js"]
+      }
 
   //  "user": [ "ccm.instance", "https://ccmjs.github.io/akless-components/user/versions/ccm.user-8.0.0.js", [ "ccm.get", "https://ccmjs.github.io/akless-components/user/resources/configs.js", "guest" ] ],
   //  "logger": [ "ccm.instance", "https://ccmjs.github.io/akless-components/log/versions/ccm.log-4.0.1.js", [ "ccm.get", "https://ccmjs.github.io/akless-components/log/resources/configs.js", "greedy" ] ],
@@ -28,101 +87,112 @@
 
     Instance: function () {
 
+      const self = this;
       let $;
-      const user = 'jdoe2s';
+      let my;
 
       this.init = async () => {
 
         // set shortcut to help functions
-        $ = this.ccm.helper;
+        $ = self.ccm.helper;
 
       };
 
       this.ready = async () => {
 
+        // privatize all possible instance members
+        my = $.privatize( self );
         // logging of 'ready' event
-        this.logger && this.logger.log( 'ready', $.privatize( this, true ) );
+        self.logger && self.logger.log( 'ready', $.clone( my ) );
 
       };
 
       this.start = async () => {
-        // render content that is given via Light DOM
-        $.setContent( this.element, this.inner );
-
-        /**
-         * dataset for rendering
-         * @type {Object}
-         */
-        const dataset = await $.dataset( this.data );
-
-          /**
-           * submit button
-           * @type {Element}
-           */
-          const submit = this.element.querySelector( 'input[type=submit]' );
-
-          // has submit button?
-          if ( submit ) {
-
-            // submit button is disabled until all subcomponents are ready
-            // submit.disabled = true;
-
-            // wrap own content with a form tag to support browser validation on input fields
-            const form = document.createElement( 'form' );
-            this.element.parentNode.replaceChild( form, this.element );
-            form.appendChild( this.element );
-
-            // set submit event
-            form.onsubmit = async event => {
-
-              // prevent page reload
-              event.preventDefault();
-
-              // // has user instance? => login user (if not already logged in)
-              // this.user && await this.user.login();
-
-              /**
-               * resulting form data
-               * @type {Object}
-               */
-              let results = this.getValue();
-              results['user'] = user;
-
-              // logging of 'submit' event
-              this.logger && this.logger.log( 'submit', results );
-
-              // perform 'finish' actions and provide result data
-              this.onfinish && await $.onFinish( this, results ).catch(
-                  error =>  console.log(error)
-              );
-
-            };
-
-          }
-
         // logging of 'start' event
-        this.logger && this.logger.log( 'start', $.clone( dataset ) );
+        self.logger && self.logger.log( 'start', $.clone( my ) );
 
+        let main = $.html( my.html.main );
+        const dataset = await my.menu.data.get();
+
+        setupNavigation();
+
+        renderContent();
+
+        $.setContent( self.element, main );
+
+        function setupNavigation() {
+          let header = main.querySelector( "#header" );
+          header.innerHTML = my.navigation.firstChild.innerHTML;
+
+          // setup common navigation bar behaviors
+          [ ...main.querySelectorAll( '.navbar-nav  > li' ) ].map( li => {
+            li.addEventListener( 'click', () => {
+              [ ...main.querySelectorAll( '.navbar-nav  > li' ) ].map( li => {
+                li.classList.re2move( 'active' );
+              } );
+              li.classList.add( 'active' );
+            } );
+          } );
+
+          main.querySelector( ".navbar-toggle" ).addEventListener( 'click', () => {
+            main.querySelector( ".navbar-toggle" ).classList.toggle( 'collapsed' );
+            main.querySelector( ".navbar-collapse" ).classList.toggle( 'in' );
+          } );
+
+          // setup home button
+          main.querySelector( "#home" ).addEventListener( 'click', () => {
+            main.querySelector( ".navbar-toggle" ).click();
+            renderContent();
+          } );
+
+          // setup help button
+          main.querySelector( "#help" ).addEventListener( 'click', () => {
+            $.setContent( main.querySelector( "#article" ), $.html(
+              '<div class="container">' +
+              '  <div class="page-header">' +
+              '    <h3>About this app <small>Infos and how to</small></h3>' +
+              '  </div><br>'+
+              '<div id="accordion"></div>'+
+              '</div>'
+              // TODO(minhnh) add accordion app
+            ) );
+          } );
+
+          // TODO(minhnh) sign-on button
+        }
+
+        function renderContent() {
+          const article = main.querySelector( "#article" );
+          $.setContent( article, '' );
+          dataset.forEach( result => {
+            let content = $.html(my.html.content);
+            $.append(article, content);
+
+            $.setContent( content.querySelector( "#section" ), result.section);
+
+            my.menu.comp.start( {
+              root: content.querySelector( "#menu-list" ),
+              data: result,
+              onclick: ( event ) => {
+                const div = getDiv();
+                div.appendChild( event.content );
+                $.setContent( main.querySelector( "#article" ), div );
+              }
+            } );
+          } );
+        }
+
+        function getDiv() {
+          const div = document.createElement( 'div' );
+          div.setAttribute( 'id', 'padding' );
+          return div;
+        }
       };
-
-      /**
-       * returns resulting form data
-       * @returns {Object} resulting form data
-       */
-      this.getValue = () => {
-        /**
-         * result data
-         * @type {Object}
-         */
-        let results = $.formData( this.element );  // fetch values from HTML input elements
-
-        // give only deep copies of results to outside
-        return $.clone( results );
-      }
 
     }
 
   };
 
   let b="ccm."+component.name+(component.version?"-"+component.version.join("."):"")+".js";if(window.ccm&&null===window.ccm.files[b])return window.ccm.files[b]=component;(b=window.ccm&&window.ccm.components[component.name])&&b.ccm&&(component.ccm=b.ccm);"string"===typeof component.ccm&&(component.ccm={url:component.ccm});let c=(component.ccm.url.match(/(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)/)||["latest"])[0];if(window.ccm&&window.ccm[c])window.ccm[c].component(component);else{var a=document.createElement("script");document.head.appendChild(a);component.ccm.integrity&&a.setAttribute("integrity",component.ccm.integrity);component.ccm.crossorigin&&a.setAttribute("crossorigin",component.ccm.crossorigin);a.onload=function(){window.ccm[c].component(component);document.head.removeChild(a)};a.src=component.ccm.url}
+
 } )();

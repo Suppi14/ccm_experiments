@@ -1,36 +1,95 @@
 <html lang="en">
+
+<style>
+    html { height: 100%; -webkit-text-size-adjust: none; -webkit-overflow-scrolling: touch; }
+    body { margin: 0; height: 100%; width: 100%; }
+    #start {
+        font-family: 'Lucida Grande', Tahoma, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        height: 100%;
+        text-align: center;
+    }
+    button {
+        font-family: 'Lucida Grande', Tahoma, Arial, sans-serif;
+        background-color: #e7e7e7;
+        color: black;
+        border: none;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        cursor: pointer;
+    }
+    @keyframes ccm_loading { to { transform: rotate(360deg); } }
+</style>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Questions and Answers</title>
+    <title>Course Demo</title>
 </head>
+
 <body>
-<script src="ccm.course_demo.js"></script>
-<ccm-course_demo key='["ccm.get", "resources/configs.js", "localhost"]'>
-    <h3>Input</h3>
 
-    <label>
-        Question 1: <br />
-        <input type="text" name="q1">  <br />
-    </label>
-    <label>
-        Answer 1:  <br />
-        <input type="text" name="a1"> <br />
-    </label>
-    <label>
-        Question 2:  <br />
-        <input type="text" name="q2"> <br />
-    </label>
-    <label>
-        Answer 2:  <br />
-        <input type="text" name="a2"> <br />
-    </label>
+<div id="start">
+    <div>
+        <h3>Welcome<br><br>to<br><br>Course demo</h3>
+    </div>
+    <div>
+        <button>Start App</button>
+    </div>
+</div>
 
-    <h3>Submit</h3>
-    <input type="submit">
+<script src="https://ccmjs.github.io/ccm/versions/ccm-18.0.6.js"></script>
 
-</ccm-course_demo>
+<script>
+    // preload resources in parallel
+    ccm.load(
+      // local
+      'ccm.course_demo.js',
+      'resources/datasets.js',
+      'resources/default.css',
+      'resources/menu.css',
+
+      // non ccm sources
+      'https://ccmjs.github.io/akless-components/libs/bootstrap/css/bootstrap.css',
+      'https://ccmjs.github.io/akless-components/libs/bootstrap/css/font-face.css',
+      // 'https://ccmjs.github.io/akless-components/libs/bootstrap/fonts/glyphicons-halflings-regular.woff2',
+      'https://ccmjs.github.io/tkless-components/libs/bootstrap/css/bootstrap.css',
+      'https://ccmjs.github.io/tkless-components/libs/bootstrap/css/font-face.css',
+      [
+        'https://ccmjs.github.io/tkless-components/libs/jquery/jquery.min.js',
+        'https://ccmjs.github.io/tkless-components/libs/bootstrap/js/bootstrap.min.js',
+      ],
+      'https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css'
+    );
+
+    // click event for start button
+    document.querySelector( 'button' ).addEventListener( 'click', () => {
+      // render loading icon
+      ccm.helper.setContent(
+        document.querySelector( '#start' ),
+        ccm.helper.html( {
+          class: 'ccm_loading',
+          style: 'display: grid;',
+          inner: {
+            style:  'align-self: center; justify-self: center; display: inline-block; width: 2em; height: 2em;' +
+                    ' border: 0.3em solid #f3f3f3; border-top-color: #009ee0; border-left-color: #009ee0;' +
+                    ' border-radius: 50%; animation: ccm_loading 1.5s linear infinite;'
+          }
+        })
+      );
+
+      // start app
+      ccm.start( 'ccm.course_demo.js', instance => ccm.helper.setContent( document.body, instance.root ));
+
+    });
+</script>
 
 </body>
 </html>
