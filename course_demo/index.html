@@ -86,7 +86,10 @@
       );
 
       // start app
-      ccm.start( 'ccm.course_demo.js', instance => ccm.helper.setContent( document.body, instance.root ));
+      (async () => {
+        const instance = await ccm.start( 'ccm.course_demo.js' );
+        ccm.helper.setContent( document.body, instance.root );
+      })();
 
     });
 </script>
